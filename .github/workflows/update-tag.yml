@@ -1,0 +1,12 @@
+name: Update Tag
+
+on:
+  repository_dispatch:
+    types: [update-tag]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test
+        run: 'echo "tag: ${{ github.event.client_payload.tag }}"'

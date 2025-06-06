@@ -43,3 +43,9 @@ jobs:
     steps:
       - name: Testing
         run: echo "hello ${{ matrix.name }}"
+      - name: Dispatch Update Event
+        if: ${{ matrix.name == 'UPDATE' }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: update-tag
+          client-payload: '{"tag": "${{ matrix.tag }}"}'
