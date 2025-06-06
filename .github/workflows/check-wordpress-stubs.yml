@@ -13,6 +13,8 @@ jobs:
   check:
     runs-on: ubuntu-latest
     name: Check for Changes
+    outputs:
+      changes: ${{ steps.check.outputs.changes }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -29,5 +31,11 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Check for Changes
         id: check
-        run: ./bin/find-changes --working-dir=./tmp $SOURCE_REPO_URL $SOURCE_FILE_PATH $TARGET_REPO_NAME
+        run: echo "changes=$(./bin/find-changes --working-dir=./tmp $SOURCE_REPO_URL $SOURCE_FILE_PATH $TARGET_REPO_NAME)" >> "$GITHUB_OUTPUT"
 
+  dispatch:
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - name: Test
+        run: echo "${{ needs.check.outputs.changes }}"

@@ -100,10 +100,10 @@ use Symfony\Component\Finder\SplFileInfo;
 					if($externalKey !== $existingKey) {
 						$changes[] = [
 							'name' => 'UPDATE',
-							'source' => $sourceRepoUrl,
+							//'source' => $sourceRepoUrl,
 							'tag' => $externalTag,
-							'path' => $sourcePath,
-							'target' => $targetRepoName,
+							//'path' => $sourcePath,
+							//'target' => $targetRepoName,
 						];
 					} else {
 						/*
@@ -119,10 +119,10 @@ use Symfony\Component\Finder\SplFileInfo;
 				} else {
 					$changes[] = [
 						'name' => 'CREATE',
-						'source' => $sourceRepoUrl,
+						//'source' => $sourceRepoUrl,
 						'tag' => $externalTag,
-						'path' => $sourcePath,
-						'target' => $targetRepoName,
+						//'path' => $sourcePath,
+						//'target' => $targetRepoName,
 					];
 				}
 			} else {
@@ -141,9 +141,9 @@ use Symfony\Component\Finder\SplFileInfo;
 
 			$changes[] = [
 				'name' => 'DELETE',
-				'source' => '',
-				'path' => '',
-				'target' => $targetRepoName,
+				//'source' => '',
+				//'path' => '',
+				//'target' => $targetRepoName,
 				'tag' => $existingTag,
 			];
 		}
