@@ -49,4 +49,4 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: update-tag
-          client-payload: '{"tag": "${{ matrix.tag }}", "source": "$SOURCE_REPO_URL", "path": "$SOURCE_FILE_PATH", "target": "$TARGET_REPO_NAME"}'
+          client-payload: '{"tag": "${{ matrix.tag }}", "source": "${{ env.SOURCE_REPO_URL }}", "path": "${{ env.SOURCE_FILE_PATH }}", "target": "${{ env.TARGET_REPO_NAME }}"}'
