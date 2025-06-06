@@ -1,0 +1,29 @@
+name: Check wordpress-stubs
+
+on:
+  workflow_dispatch:
+
+env:
+  SOURCE_REPO_URL: https://github.com/php-stubs/wordpress-stubs.git
+  SOURCE_FILE_PATH: wordpress-stubs.php
+  TARGET_REPO_NAME: wordpress-stubs
+
+jobs:
+
+  check:
+    runs-on: ubuntu-latest
+    name: Check for Changes
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+      - name: Install Dependencies
+        run: composer install --no-interaction
+      - name: Check for Changes
+        id: check
+        run: /bin/find-changes --working-dir=./tmp $SOURCE_REPO_URL $SOURCE_FILE_PATH $TARGET_REPO_NAME
+

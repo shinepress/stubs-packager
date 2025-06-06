@@ -1,0 +1,156 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use CzProject\GitPhp\Git;
+use CzProject\GitPhp\Runners\CliRunner;
+use ShinePress\StubDivider\Processor;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\SingleCommandApplication;
+use Symfony\Component\Filesystem\Path;
+use Symfony\Component\Finder\SplFileInfo;
+
+(new SingleCommandApplication())
+	->setName('Delete Version')
+	->addArgument('source', InputArgument::REQUIRED, 'source repository url')
+	->addArgument('path', InputArgument::REQUIRED, 'source file path')
+	->addArgument('target', InputArgument::REQUIRED, 'target repository name')
+	->addOption('working-dir', 'w', InputOption::VALUE_REQUIRED)
+	->setCode(function(InputInterface $input, OutputInterface $output): int {
+		$cwd = getcwd();
+
+		$workingDir = $input->getOption('working-dir');
+
+		if(is_null($workingDir) && is_string($cwd)) {
+			$workingDir = Path::normalize($cwd);
+		} elseif(Path::isRelative($workingDir) && is_string($cwd)) {
+			$workingDir = Path::makeAbsolute($workingDir, $cwd);
+		} elseif(Path::isAbsolute($workingDir)) {
+			$workingDir = Path::normalize($workingDir);
+		} else {
+			throw new RuntimeException('unable to determine current working directory');
+		}
+
+		$git = new Git();
+
+		$sourceRepoUrl = $input->getArgument('source');
+		$sourcePath = Path::makeAbsolute('./source', $workingDir);
+		$sourceRepo = $git->cloneRepository($sourceRepoUrl, $sourcePath);
+
+		$sourcePath = $input->getArgument('path');
+
+		$targetRepoName = $input->getArgument('target');
+		$targetRepoUrl = 'git@github.com:shinepress/' . $targetRepoName . '.git';
+		$targetPath = Path::makeAbsolute('./target', $workingDir);
+		$targetRepo = $git->cloneRepository($targetRepoUrl, $targetPath);
+
+		$externalTags = [];
+		$existingTags = [];
+
+		$sourceTags = $sourceRepo->getTags();
+		if(is_array($sourceTags)) {
+			foreach($sourceTags as $sourceTag) {
+				$messages = $sourceRepo->execute(
+					'rev-list',
+					'-1',
+					$sourceTag,
+				);
+
+				$message = '';
+				if(count($messages) > 0) {
+					$message = trim($messages[0]) . ':' . $targetRepo->getLastCommitId();
+				}
+
+				$externalTags[$sourceTag] = $message;
+			}
+		}
+
+		$targetTags = $targetRepo->getTags();
+		if(is_array($targetTags)) {
+			foreach($targetTags as $targetTag) {
+				$messages = $targetRepo->execute(
+					'tag',
+					'-l',
+					'--format=%(contents)',
+					$targetTag,
+				);
+
+				$message = '';
+				if(count($messages) > 0) {
+					$message = trim($messages[0]);
+				}
+
+				$existingTags[$targetTag] = $message;
+			}
+		}
+
+		$changes = [];
+
+		foreach($externalTags as $externalTag => $externalKey) {
+			if(preg_match('/^v?([0-9]+(?:\.[0-9]+)+)$/', $externalTag, $matches)) {
+				$tagName = $matches[1];
+
+				if(isset($existingTags[$tagName])) {
+					$existingKey = $existingTags[$tagName];
+
+					if($externalKey !== $existingKey) {
+						$changes[] = [
+							'name' => 'UPDATE',
+							'source' => $sourceRepoUrl,
+							'tag' => $externalTag,
+							'path' => $sourcePath,
+							'target' => $targetRepoName,
+						];
+					} else {
+						/*
+						$changes[] = [
+							'name' => 'IGNORE',
+							'source' => '',
+							'path' => '',
+							'tag' => $externalTag,
+							'target' => '',
+						];
+						*/
+					}
+				} else {
+					$changes[] = [
+						'name' => 'CREATE',
+						'source' => $sourceRepoUrl,
+						'tag' => $externalTag,
+						'path' => $sourcePath,
+						'target' => $targetRepoName,
+					];
+				}
+			} else {
+				continue;
+			}
+		}
+
+		foreach($existingTags as $existingTag => $existingKey) {
+			if(isset($externalTags[$existingTag])) {
+				continue;
+			}
+
+			if(isset($externalTags['v' . $existingTag])) {
+				continue;
+			}
+
+			$changes[] = [
+				'name' => 'DELETE',
+				'source' => '',
+				'path' => '',
+				'target' => $targetRepoName,
+				'tag' => $existingTag,
+			];
+		}
+
+		$output->writeln(json_encode($changes));
+
+		return 0;
+		
+	})
+	->run();

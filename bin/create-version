@@ -1,0 +1,184 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+use CzProject\GitPhp\Git;
+use CzProject\GitPhp\Runners\CliRunner;
+use ShinePress\StubDivider\Processor;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\SingleCommandApplication;
+use Symfony\Component\Filesystem\Path;
+use Symfony\Component\Finder\SplFileInfo;
+
+(new SingleCommandApplication())
+	->setName('Create Version')
+	->addArgument('source', InputArgument::REQUIRED, 'source repository url')
+	->addArgument('tag', InputArgument::REQUIRED, 'source tag')
+	->addArgument('path', InputArgument::REQUIRED, 'source file path')
+	->addArgument('target', InputArgument::REQUIRED, 'target repository name')
+	->addOption('working-dir', 'w', InputOption::VALUE_REQUIRED)
+	->setCode(function(InputInterface $input, OutputInterface $output): int {
+		$cwd = getcwd();
+
+		$workingDir = $input->getOption('working-dir');
+
+		if(is_null($workingDir) && is_string($cwd)) {
+			$workingDir = Path::normalize($cwd);
+		} elseif(Path::isRelative($workingDir) && is_string($cwd)) {
+			$workingDir = Path::makeAbsolute($workingDir, $cwd);
+		} elseif(Path::isAbsolute($workingDir)) {
+			$workingDir = Path::normalize($workingDir);
+		} else {
+			throw new RuntimeException('unable to determine current working directory');
+		}
+
+		
+		$sourceTag = $input->getArgument('tag');
+		$targetTag = $sourceTag;
+		if(preg_match('/^v?([0-9]+(?:\.[0-9]+)*)$/', $sourceTag, $matches)) {
+			$targetTag = $matches[1];
+		}
+
+		$source = $input->getArgument('source');
+		$targetRepoName = $input->getArgument('target');
+		$target = 'git@github.com:shinepress/' . $targetRepoName . '.git';
+
+		$path = $input->getArgument('path');
+
+
+
+		$output->writeln('source-tag: ' . $sourceTag);
+		$output->writeln('target-tag: ' . $targetTag);
+		$output->writeln('working-dir: ' . $workingDir);
+		$output->writeln('source: ' . $source);
+		$output->writeln('path: ' . $path);
+		$output->writeln('target: ' . $target);
+
+		$runner = new CliRunner();
+		$git = new Git($runner);
+
+		$sourceDir = Path::makeAbsolute('./source', $workingDir);
+		$filePath = Path::makeAbsolute($path, $sourceDir);
+
+
+
+		$sourceRepo = $git->cloneRepository($source, $sourceDir, [
+			'--branch',
+			$sourceTag,
+		]);
+
+
+
+		$sourceCommit = $sourceRepo->getLastCommit();
+
+		$dateFormat = 'Y-m-d\TH:i:s\Z';
+		$commitMessage = 'Version ' . $sourceTag;
+		$commitDate = $sourceCommit->getCommitterDate()->format($dateFormat);
+		$commitAuthor = $sourceCommit->getAuthorName() . ' <' . $sourceCommit->getAuthorEmail() . '>';
+
+		if(!file_exists($filePath)) {
+			throw new RuntimeException(sprintf(
+				'file "%s" does not exist',
+				$filePath,
+			));
+		}
+
+		$sourceFile = new SplFileInfo(
+			$filePath,
+			Path::makeRelative(Path::getDirectory($filePath), $sourceDir),
+			Path::makeRelative($filePath, $sourceDir),
+		);
+
+		$targetDir = $workingDir . '/target';
+
+		$targetRepo = $git->cloneRepository($target, $targetDir);
+
+		$tagAnnotation = $sourceRepo->getLastCommitId() . ':' . $targetRepo->getLastCommitId();
+
+		$composerPath = Path::makeAbsolute('./composer.json', $targetDir);
+		$readmePath = Path::makeAbsolute('./README.md', $targetDir);
+
+		$composerContents = null;
+		if(file_exists($composerPath)) {
+			$composerContents = file_get_contents($composerPath);
+		}
+
+		$readmeContents = null;
+		if(file_exists($readmePath)) {
+			$readmeContents = file_get_contents($readmePath);
+		}
+
+		$targetRepo->execute([
+			'switch',
+			'--orphan',
+			'temp-' . $targetTag,
+		]);
+
+		$processor = new Processor($sourceFile);
+		foreach($processor->process($targetDir) as $file) {
+			$file->save();
+			$targetRepo->addFile($file->getFilename());
+			$output->writeln($file->getFilename());
+		}
+
+		if(is_string($composerContents)) {
+			file_put_contents($composerPath, $composerContents);
+			$targetRepo->addFile($composerPath);
+		}
+
+		if(is_string($readmeContents)) {
+			file_put_contents($readmePath, $readmeContents);
+			$targetRepo->addFile($readmePath);
+		}
+
+		$targetRepo->commit($commitMessage, [
+			'--date' => $commitDate,
+			'--author' => $commitAuthor,
+		]);
+
+		$runner->run(
+			$targetRepo->getRepositoryPath(),
+			[
+				'commit',
+				'--amend',
+				'--no-edit',
+			],
+			[
+				'GIT_COMMITTER_DATE' => $commitDate,
+			],
+		);
+
+		$targetRepo->createTag($targetTag, [
+			'--annotate',
+			'--message' => $tagAnnotation,
+		]);
+
+		$targetRepo->push([
+			'origin',
+			'refs/tags/' . $targetTag,
+		]);
+
+
+		$sourceCommit = $sourceRepo->getLastCommit();
+		$output->writeln('Commit ID: ' . $sourceCommit->getId());
+		$output->writeln('Committer Email: ' . $sourceCommit->getCommitterEmail());
+		$output->writeln('Committer Name: ' . $sourceCommit->getCommitterName());
+		$output->writeln('Committer Name: ' . $sourceCommit->getCommitterDate()->format($dateFormat));
+		$output->writeln('Author Email: ' . $sourceCommit->getAuthorEmail());
+		$output->writeln('Author Name: ' . $sourceCommit->getAuthorName());
+		$output->writeln('Author Name: ' . $sourceCommit->getAuthorDate()->format($dateFormat));
+
+
+		$output->writeln('Commit ID: ' . $sourceRepo->getLastCommitId());
+
+
+		exec('rm -rf ' . $sourceDir);
+
+
+		return 0;
+	})
+	->run();
+

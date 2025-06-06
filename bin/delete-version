@@ -1,0 +1,60 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use CzProject\GitPhp\Git;
+use CzProject\GitPhp\Runners\CliRunner;
+use ShinePress\StubDivider\Processor;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\SingleCommandApplication;
+use Symfony\Component\Filesystem\Path;
+use Symfony\Component\Finder\SplFileInfo;
+
+(new SingleCommandApplication())
+	->setName('Delete Version')
+	->addArgument('target', InputArgument::REQUIRED, 'target repository name')
+	->addArgument('tag', InputArgument::REQUIRED, 'target tag')
+	->addOption('working-dir', 'w', InputOption::VALUE_REQUIRED)
+	->setCode(function(InputInterface $input, OutputInterface $output): int {
+		$cwd = getcwd();
+
+		$workingDir = $input->getOption('working-dir');
+
+		if(is_null($workingDir) && is_string($cwd)) {
+			$workingDir = Path::normalize($cwd);
+		} elseif(Path::isRelative($workingDir) && is_string($cwd)) {
+			$workingDir = Path::makeAbsolute($workingDir, $cwd);
+		} elseif(Path::isAbsolute($workingDir)) {
+			$workingDir = Path::normalize($workingDir);
+		} else {
+			throw new RuntimeException('unable to determine current working directory');
+		}
+	
+		$targetRepoName = $input->getArgument('target');
+		$target = 'git@github.com:shinepress/' . $targetRepoName . '.git';
+
+		$targetTag = $input->getArgument('tag');
+
+		$git = new Git();
+
+		$targetDir = $workingDir . '/target';
+
+		$targetRepo = $git->cloneRepository($target, $targetDir);
+
+		$targetRepo->push(
+			[
+				'origin',
+				'refs/tags/' . $targetTag,
+			],
+			[
+				'--delete',
+			],
+		);
+
+		return 0;
+	})
+	->run();
