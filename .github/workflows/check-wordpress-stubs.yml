@@ -25,5 +25,5 @@ jobs:
         run: composer install --no-interaction
       - name: Check for Changes
         id: check
-        run: /bin/find-changes --working-dir=./tmp $SOURCE_REPO_URL $SOURCE_FILE_PATH $TARGET_REPO_NAME
+        run: ./bin/find-changes --working-dir=./tmp $SOURCE_REPO_URL $SOURCE_FILE_PATH $TARGET_REPO_NAME
 
