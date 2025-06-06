@@ -27,8 +27,8 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Set Committer Info
         run: |
-          git config --global user.name "${{ env.COMMITTER_NAME }}"
-          git config --global user.email "${{ env.COMMITTER_EMAIL }}"
+          git config --global user.name "${{ vars.COMMITTER_NAME }}"
+          git config --global user.email "${{ vars.COMMITTER_EMAIL }}"
       - name: Delete Tag
         run: ./bin/delete-version --working-dir=./delete ${{ github.event.client_payload.target }} ${{ github.event.client_payload.tag }}
       - name: Create Tag
