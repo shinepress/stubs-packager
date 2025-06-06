@@ -3,6 +3,9 @@ name: Check wordpress-stubs
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
   SOURCE_REPO_URL: https://github.com/php-stubs/wordpress-stubs.git
   SOURCE_FILE_PATH: wordpress-stubs.php
