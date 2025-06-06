@@ -121,7 +121,7 @@ use Symfony\Component\Finder\SplFileInfo;
 		foreach($processor->process($targetDir) as $file) {
 			$file->save();
 			$targetRepo->addFile($file->getFilename());
-			$output->writeln($file->getFilename());
+			//$output->writeln($file->getFilename());
 		}
 
 		if(is_string($composerContents)) {
