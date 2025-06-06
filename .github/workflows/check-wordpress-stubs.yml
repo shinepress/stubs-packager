@@ -44,11 +44,9 @@ jobs:
         include: ${{ fromJson(needs.check.outputs.changes) }}
     name: Dispatch ${{ matrix.tag }}
     steps:
-      - name: Testing
-        run: echo "hello ${{ matrix.name }}"
       - name: Dispatch Update Event
         if: ${{ matrix.name == 'UPDATE' }}
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: update-tag
-          client-payload: '{"tag": "${{ matrix.tag }}"}'
+          client-payload: '{"tag": "${{ matrix.tag }}", "source": "$SOURCE_REPO_URL", "path": "$SOURCE_FILE_PATH", "target": "$TARGET_REPO_NAME"}'
