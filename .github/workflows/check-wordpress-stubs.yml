@@ -23,6 +23,10 @@ jobs:
           tools: composer:v2
       - name: Install Dependencies
         run: composer install --no-interaction
+      - name: Add SSH Key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Check for Changes
         id: check
         run: ./bin/find-changes --working-dir=./tmp $SOURCE_REPO_URL $SOURCE_FILE_PATH $TARGET_REPO_NAME
