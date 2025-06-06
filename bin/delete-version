@@ -38,6 +38,9 @@ use Symfony\Component\Finder\SplFileInfo;
 		$target = 'git@github.com:shinepress/' . $targetRepoName . '.git';
 
 		$targetTag = $input->getArgument('tag');
+		if(preg_match('/^v?([0-9]+(?:\.[0-9]+)*)$/', $targetTag, $matches)) {
+			$targetTag = $matches[1];
+		}
 
 		$git = new Git();
 

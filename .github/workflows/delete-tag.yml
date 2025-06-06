@@ -8,5 +8,5 @@ jobs:
   delete:
     runs-on: ubuntu-latest
     steps:
-      - name: Test
-        run: 'echo "tag: ${{ github.event.client_payload.tag }}"'
+      - run: 'echo "TAG: ${{ github.event.client_payload.tag }}"'
+      - run: 'echo "TARGET: ${{ github.event.client_payload.target }}"'
