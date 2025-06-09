@@ -8,10 +8,6 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - run: 'echo "SOURCE: ${{ github.event.client_payload.source }}"'
-      - run: 'echo "TAG: ${{ github.event.client_payload.tag }}"'
-      - run: 'echo "PATH: ${{ github.event.client_payload.path }}"'
-      - run: 'echo "TARGET: ${{ github.event.client_payload.target }}"'
       - name: Checkout Code
         uses: actions/checkout@v4
       - name: Install PHP
