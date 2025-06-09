@@ -74,7 +74,9 @@ use Symfony\Component\Finder\SplFileInfo;
 
 		$sourceCommit = $sourceRepo->getLastCommit();
 
-		$dateFormat = 'Y-m-d\TH:i:s\Z';
+		//$dateFormat = 'Y-m-d\TH:i:s\Z';
+		$dateFormat = 'r'; // RFC 2822
+		//$dateFormat='Y-m-d\TH:i:s';
 		$commitMessage = 'Version ' . $sourceTag;
 		$commitDate = $sourceCommit->getCommitterDate()->format($dateFormat);
 		$commitAuthor = $sourceCommit->getAuthorName() . ' <' . $sourceCommit->getAuthorEmail() . '>';
@@ -134,6 +136,20 @@ use Symfony\Component\Finder\SplFileInfo;
 			$targetRepo->addFile($readmePath);
 		}
 
+		$runner->run(
+			$targetRepo->getRepositoryPath(),
+			[
+				'commit',
+				'--message' => $commitMessage,
+				'--date' => $commitDate,
+				'--author' => $commitAuthor,
+			],
+			[
+				'GIT_COMMITTER_DATE' => $commitDate,
+			],
+		);
+
+		/*
 		$targetRepo->commit($commitMessage, [
 			'--date' => $commitDate,
 			'--author' => $commitAuthor,
@@ -150,6 +166,7 @@ use Symfony\Component\Finder\SplFileInfo;
 				'GIT_COMMITTER_DATE' => $commitDate,
 			],
 		);
+		*/
 
 		$targetRepo->createTag($targetTag, [
 			'--annotate',
@@ -160,23 +177,6 @@ use Symfony\Component\Finder\SplFileInfo;
 			'origin',
 			'refs/tags/' . $targetTag,
 		]);
-
-
-		$sourceCommit = $sourceRepo->getLastCommit();
-		$output->writeln('Commit ID: ' . $sourceCommit->getId());
-		$output->writeln('Committer Email: ' . $sourceCommit->getCommitterEmail());
-		$output->writeln('Committer Name: ' . $sourceCommit->getCommitterName());
-		$output->writeln('Committer Name: ' . $sourceCommit->getCommitterDate()->format($dateFormat));
-		$output->writeln('Author Email: ' . $sourceCommit->getAuthorEmail());
-		$output->writeln('Author Name: ' . $sourceCommit->getAuthorName());
-		$output->writeln('Author Name: ' . $sourceCommit->getAuthorDate()->format($dateFormat));
-
-
-		$output->writeln('Commit ID: ' . $sourceRepo->getLastCommitId());
-
-
-		exec('rm -rf ' . $sourceDir);
-
 
 		return 0;
 	})
