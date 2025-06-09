@@ -159,6 +159,7 @@ use Symfony\Component\Finder\SplFileInfo;
 		$targetRepo->execute(
 			'rebase',
 			'--committer-date-is-author-date',
+			'HEAD',
 		);
 
 		/*
