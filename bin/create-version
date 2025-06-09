@@ -150,17 +150,20 @@ use Symfony\Component\Finder\SplFileInfo;
 			],
 		);
 		*/
-
+		
+		putenv('GIT_COMMITTER_DATE="' . $commitDate . '"');
 		$targetRepo->commit($commitMessage, [
 			'--date' => $commitDate,
-			'--author' => $commitAuthor,
+		//	'--author' => $commitAuthor,
 		]);
 
+		/*
 		$targetRepo->execute(
 			'rebase',
 			'--committer-date-is-author-date',
 			'HEAD',
 		);
+		*/
 
 		/*
 		$runner->run(
