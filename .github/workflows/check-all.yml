@@ -11,6 +11,7 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
+    name: Update Lastrun
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -18,7 +19,7 @@ jobs:
         run: |
           git config --global user.name "${{ vars.COMMITTER_NAME }}"
           git config --global user.email "${{ vars.COMMITTER_EMAIL }}"
-      - name: Set Last Update
+      - name: Set Lastrun
         run: |
           DATE=$(date)
           echo $DATE >> .lastrun
@@ -35,8 +36,9 @@ jobs:
           - source: https://github.com/php-stubs/wordpress-stubs.git
             path: wordpress-stubs.php
             target: wordpress-stubs
+    name: Check Source (${{ matrix.target }})
     steps:
-      - name: Dispatch Check (${{ matrix.target }})
+      - name: Dispatch Check Event
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: check-tags
