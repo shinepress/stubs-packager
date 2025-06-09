@@ -156,6 +156,12 @@ use Symfony\Component\Finder\SplFileInfo;
 			'--author' => $commitAuthor,
 		]);
 
+		$targetRepo->execute(
+			'rebase',
+			'--committer-date-is-author-date',
+		);
+
+		/*
 		$runner->run(
 			$targetRepo->getRepositoryPath(),
 			[
@@ -167,6 +173,7 @@ use Symfony\Component\Finder\SplFileInfo;
 				'GIT_COMMITTER_DATE' => $commitDate,
 			],
 		);
+		*/
 
 		$targetRepo->createTag($targetTag, [
 			'--annotate',
