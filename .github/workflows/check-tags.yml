@@ -40,6 +40,20 @@ jobs:
         include: ${{ fromJson(needs.check.outputs.changes) }}
     name: Dispatch ${{ matrix.tag }}
     steps:
+      - name: Dispatch Create Event
+        if: ${{ matrix.name == 'CREATE' }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: create-tag
+          client-payload: '{"tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
+
+      - name: Dispatch Delete Event
+        if: ${{ matrix.name == 'DELETE' }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: delete-tag
+          client-payload: '{"tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
+
       - name: Dispatch Update Event
         if: ${{ matrix.name == 'UPDATE' }}
         uses: peter-evans/repository-dispatch@v3
