@@ -136,6 +136,7 @@ use Symfony\Component\Finder\SplFileInfo;
 			$targetRepo->addFile($readmePath);
 		}
 
+		/*
 		$runner->run(
 			$targetRepo->getRepositoryPath(),
 			[
@@ -148,8 +149,8 @@ use Symfony\Component\Finder\SplFileInfo;
 				'GIT_COMMITTER_DATE' => $commitDate,
 			],
 		);
+		*/
 
-		/*
 		$targetRepo->commit($commitMessage, [
 			'--date' => $commitDate,
 			'--author' => $commitAuthor,
@@ -166,7 +167,6 @@ use Symfony\Component\Finder\SplFileInfo;
 				'GIT_COMMITTER_DATE' => $commitDate,
 			],
 		);
-		*/
 
 		$targetRepo->createTag($targetTag, [
 			'--annotate',
