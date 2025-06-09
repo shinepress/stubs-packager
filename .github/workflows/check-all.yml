@@ -1,0 +1,40 @@
+name: Check All
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Set Committer Info
+        run: |
+          git config --global user.name "${{ vars.COMMITTER_NAME }}"
+          git config --global user.email "${{ vars.COMMITTER_EMAIL }}"
+      - name: Set Last Update
+        run: |
+          DATE=$(date)
+          echo $DATE >> .lastrun
+          git add .lastrun
+          git commit -m "Last Run: $LASTRUN"
+          git push
+
+  dispatch:
+    needs: update
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - source: https://github.com/php-stubs/wordpress-stubs.git
+            path: wordpress-stubs.php
+            target: wordpress-stubs
+    steps:
+      - name: Dispatch Check (${{ matrix.target }})
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: check-tags
+          client-payload: '{"source": "${{ matrix.source }}", "path": "${{ matrix.path }}", "target": "${{ matrix.target }}"}'
