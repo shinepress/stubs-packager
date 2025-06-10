@@ -24,7 +24,7 @@ jobs:
           DATE=$(date)
           echo $DATE >> .lastrun
           git add .lastrun
-          git commit -m "Last Run: $LASTRUN"
+          git commit -m "Last Run: $DATE"
           git push
 
   dispatch:
