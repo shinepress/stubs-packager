@@ -102,6 +102,9 @@ use Symfony\Component\Finder\SplFileInfo;
 
 		$composerPath = Path::makeAbsolute('./composer.json', $targetDir);
 		$readmePath = Path::makeAbsolute('./README.md', $targetDir);
+		$licensePath = Path::makeAbsolute('./LICENSE', $targetDir);
+		$sourceLicensePath = Path::makeAbsolute('./LICENSE', $sourceDir);
+		$sourceComposerPath = Path::makeAbsolute('./composer.json', $sourceDir);
 
 		$composerContents = null;
 		if(file_exists($composerPath)) {
@@ -111,6 +114,25 @@ use Symfony\Component\Finder\SplFileInfo;
 		$readmeContents = null;
 		if(file_exists($readmePath)) {
 			$readmeContents = file_get_contents($readmePath);
+		}
+
+		$licenseContents = null;
+		if(file_exists($licensePath)) {
+			$licenseContents = file_get_contents($licensePath);
+		}
+
+		$sourceLicenseContents = null;
+		if(file_exists($sourceLicensePath)) {
+			$sourceLicenseContents = file_get_contents($sourceLicensePath);
+		}
+
+		$sourcePackageName = null;
+		if(file_exists($sourceComposerPath)) {
+			$sourceComposerContents = file_get_contents($sourceComposerPath);
+			$sourceComposerData = json_decode($sourceComposerContents, true);
+			if(is_array($sourceComposerData) && isset($sourceComposerData['name'])) {
+				$sourcePackageName = $sourceComposerData['name'];
+			}
 		}
 
 		$targetRepo->execute([
@@ -134,6 +156,18 @@ use Symfony\Component\Finder\SplFileInfo;
 		if(is_string($readmeContents)) {
 			file_put_contents($readmePath, $readmeContents);
 			$targetRepo->addFile($readmePath);
+		}
+
+		if(is_string($licenseContents)) {
+			file_put_contents($licensePath, $licenseContents);
+			$targetRepo->addFile($licensePath);
+		}
+
+		if(is_string($sourceLicenseContents) && is_string($sourcePackageName)) {
+			$sourceLicenseFilename = './LICENSE.' . str_replace('/', '.', $sourcePackageName);
+			$sourceLicenseNewPath = Path::makeAbsolute($sourceLicenseFilename, $targetDir);
+			file_put_contents($sourceLicenseNewPath, $sourceLicenseContents);
+			$targetRepo->addFile($sourceLicenseNewPath);
 		}
 
 		/*
