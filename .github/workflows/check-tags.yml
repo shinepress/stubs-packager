@@ -35,6 +35,7 @@ jobs:
   dispatch:
     runs-on: ubuntu-latest
     needs: check
+    if: ${{ needs.check.outputs.changes != '[]' }}
     strategy:
       matrix:
         include: ${{ fromJson(needs.check.outputs.changes) }}
