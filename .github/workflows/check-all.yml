@@ -33,7 +33,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - source: https://github.com/php-stubs/wordpress-stubs.git
+          - key: 'WORDPRESS_STUBS_KEY'
+            source: https://github.com/php-stubs/wordpress-stubs.git
             path: wordpress-stubs.php
             target: wordpress-stubs
     name: Check Source (${{ matrix.target }})
@@ -42,4 +43,4 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: check-tags
-          client-payload: '{"source": "${{ matrix.source }}", "path": "${{ matrix.path }}", "target": "${{ matrix.target }}"}'
+          client-payload: '{"key": "${{ matrix.key }}", "source": "${{ matrix.source }}", "path": "${{ matrix.path }}", "target": "${{ matrix.target }}"}'

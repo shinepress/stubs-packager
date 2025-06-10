@@ -27,7 +27,7 @@ jobs:
       - name: Add SSH Key
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets[github.event.client_payload.key] }}
       - name: Check for Changes
         id: check
         run: echo "changes=$(./bin/find-changes --working-dir=./tmp ${{ github.event.client_payload.source }} ${{ github.event.client_payload.path }} ${{ github.event.client_payload.target }})" >> "$GITHUB_OUTPUT"
@@ -45,18 +45,18 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: create-tag
-          client-payload: '{"tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
+          client-payload: '{"key": "${{ github.event.client_payload.key }}, "tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
 
       - name: Dispatch Delete Event
         if: ${{ matrix.name == 'DELETE' }}
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: delete-tag
-          client-payload: '{"tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
+          client-payload: '{"key": "${{ github.event.client_payload.key }}, "tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
 
       - name: Dispatch Update Event
         if: ${{ matrix.name == 'UPDATE' }}
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: update-tag
-          client-payload: '{"tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
+          client-payload: '{"key": "${{ github.event.client_payload.key }}, "tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
