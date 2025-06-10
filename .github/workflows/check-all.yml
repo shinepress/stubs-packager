@@ -41,6 +41,10 @@ jobs:
             source: https://github.com/php-stubs/woocommerce-stubs.git
             path: woocommerce-stubs.php
             target: woocommerce-stubs
+          - key: 'WOOCOMMERCE_PACKAGES_STUBS_KEY'
+            source: https://github.com/php-stubs/woocommerce-stubs.git
+            path: woocommerce-packages-stubs.php
+            target: woocommerce-packages-stubs
     name: Check Source (${{ matrix.target }})
     steps:
       - name: Dispatch Check Event
