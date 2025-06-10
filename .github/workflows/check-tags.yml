@@ -48,5 +48,5 @@ jobs:
       - name: Dispatch Event
         uses: peter-evans/repository-dispatch@v3
         with:
-          event-type: ${{ steps.name.outputs.string }}
+          event-type: ${{ steps.name.outputs.lowercase }}
           client-payload: '{"key": "${{ github.event.client_payload.key }}", "tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
