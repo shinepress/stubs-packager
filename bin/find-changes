@@ -38,10 +38,11 @@ use Symfony\Component\Finder\SplFileInfo;
 		$git = new Git();
 
 		$sourceRepoUrl = $input->getArgument('source');
-		$sourcePath = Path::makeAbsolute('./source', $workingDir);
-		$sourceRepo = $git->cloneRepository($sourceRepoUrl, $sourcePath);
+		$sourceRepoPath = Path::makeAbsolute('./source', $workingDir);
+		$sourceRepo = $git->cloneRepository($sourceRepoUrl, $sourceRepoPath);
 
 		$sourcePath = $input->getArgument('path');
+		$sourceFilePath = Path::makeAbsolute($sourcePath, $sourceRepoPath);
 
 		$targetRepoName = $input->getArgument('target');
 		$targetRepoUrl = 'git@github.com:shinepress/' . $targetRepoName . '.git';
@@ -63,6 +64,12 @@ use Symfony\Component\Finder\SplFileInfo;
 				$message = '';
 				if(count($messages) > 0) {
 					$message = trim($messages[0]) . ':' . $targetRepo->getLastCommitId();
+				}
+
+				$sourceRepo->checkout('tags/' . $sourceTag);
+
+				if(!file_exists($sourceFilePath)) {
+					continue;
 				}
 
 				$externalTags[$sourceTag] = $message;
@@ -100,29 +107,13 @@ use Symfony\Component\Finder\SplFileInfo;
 					if($externalKey !== $existingKey) {
 						$changes[] = [
 							'name' => 'UPDATE',
-							//'source' => $sourceRepoUrl,
 							'tag' => $externalTag,
-							//'path' => $sourcePath,
-							//'target' => $targetRepoName,
 						];
-					} else {
-						/*
-						$changes[] = [
-							'name' => 'IGNORE',
-							'source' => '',
-							'path' => '',
-							'tag' => $externalTag,
-							'target' => '',
-						];
-						*/
 					}
 				} else {
 					$changes[] = [
 						'name' => 'CREATE',
-						//'source' => $sourceRepoUrl,
 						'tag' => $externalTag,
-						//'path' => $sourcePath,
-						//'target' => $targetRepoName,
 					];
 				}
 			} else {
@@ -141,9 +132,6 @@ use Symfony\Component\Finder\SplFileInfo;
 
 			$changes[] = [
 				'name' => 'DELETE',
-				//'source' => '',
-				//'path' => '',
-				//'target' => $targetRepoName,
 				'tag' => $existingTag,
 			];
 		}
