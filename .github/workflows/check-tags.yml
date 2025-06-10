@@ -8,10 +8,9 @@ permissions:
   contents: write
 
 jobs:
-
   check:
     runs-on: ubuntu-latest
-    name: Check for Changes
+    name: Check for Changes - ${{ github.event.client_payload.target }}
     outputs:
       changes: ${{ steps.check.outputs.changes }}
     steps:
@@ -46,18 +45,18 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: create-tag
-          client-payload: '{"key": "${{ github.event.client_payload.key }}, "tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
+          client-payload: '{"key": "${{ github.event.client_payload.key }}", "tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
 
       - name: Dispatch Delete Event
         if: ${{ matrix.name == 'DELETE' }}
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: delete-tag
-          client-payload: '{"key": "${{ github.event.client_payload.key }}, "tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
+          client-payload: '{"key": "${{ github.event.client_payload.key }}", "tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
 
       - name: Dispatch Update Event
         if: ${{ matrix.name == 'UPDATE' }}
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: update-tag
-          client-payload: '{"key": "${{ github.event.client_payload.key }}, "tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
+          client-payload: '{"key": "${{ github.event.client_payload.key }}", "tag": "${{ matrix.tag }}", "source": "${{ github.event.client_payload.source }}", "path": "${{ github.event.client_payload.path }}", "target": "${{ github.event.client_payload.target }}"}'
